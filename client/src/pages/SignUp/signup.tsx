@@ -1,22 +1,28 @@
-import { useState } from "react"
+// src/pages/SignUp/signup.tsx
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-
-function Login() {
-
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+function SignUp() {
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
     let navigate = useNavigate();
 
 
-    const handleSubmit = (event: React.SubmitEvent) => {
+    const handleSubmit = async (event: React.SubmitEvent) => {
         event.preventDefault();
-        console.log(`Logging in with username: ${username} and password: ${password}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/signup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                
+            },
+            body: JSON.stringify({username, password})
+        })
     }
 
     const routeChange = () => {
-        let signUpPage = '/signup';
-        navigate(signUpPage);
+        let signInPage = '/signin';
+        navigate(signInPage);
     }
 
     return (
@@ -42,10 +48,9 @@ function Login() {
                     onChange={(e) => setPassword(e.target.value)} 
                 />
             </div>
-            <button type="submit">Login</button>
-            <button onClick={routeChange}>Sign Up</button>
+            <button type="submit">Register</button>
+            <button onClick={routeChange}>Login</button>
         </form>
     )
 }
-
-export default Login
+export default SignUp;
