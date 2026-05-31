@@ -7,17 +7,22 @@ import {
   handleChangePart as onChangePart,
   handleAddPart as onAddPart,
   getComponentData,
-  getComponentsList
+  getComponentsList,
+  updateProjectName
 } from './builder';
+import { useNavigationUtils } from '../../util/util';
 
 // Dummy data for testing without backend
-const USE_DUMMY_DATA = true;
+const USE_DUMMY_DATA = false;
 
 function ProjectBuilder() {
   const { projectId } = useParams();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const { goToDashboard } = useNavigationUtils();
 
   useEffect(() => {
     const loadProject = async () => {
@@ -27,6 +32,7 @@ function ProjectBuilder() {
           ? await fetchProjectDataDummy(projectId)
           : await fetchProjectData(projectId);
         setProject(data);
+        setEditedTitle(data.name);
         setError(null);
       } catch (err) {
         console.error('Error fetching project:', err);
@@ -41,6 +47,26 @@ function ProjectBuilder() {
 
   const handleChangePart = (componentType: string) => onChangePart(componentType);
   const handleAddPart = (componentType: string) => onAddPart(componentType);
+
+  const handleSaveTitle = async () => {
+    if (!project || !editedTitle.trim()) {
+      alert('Project name cannot be empty');
+      return;
+    }
+
+    const success = await updateProjectName(project.project_id, editedTitle.trim());
+    if (success) {
+      setProject({ ...project, name: editedTitle.trim() });
+      setIsEditingTitle(false);
+    } else {
+      alert('Failed to update project name');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedTitle(project?.name || '');
+    setIsEditingTitle(false);
+  };
 
   if (loading) {
     return <div>Loading project...</div>;
@@ -58,7 +84,41 @@ function ProjectBuilder() {
 
   return (
     <div>
-      <h1>{project.name}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <button 
+          onClick={goToDashboard}
+          style={{ padding: '8px 16px' }}
+        >
+          ← Back to Dashboard
+        </button>
+        {isEditingTitle ? (
+          <>
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              style={{ fontSize: '28px', padding: '8px', flex: 1 }}
+              autoFocus
+            />
+            <button onClick={handleSaveTitle} style={{ padding: '8px 16px' }}>
+              Save
+            </button>
+            <button onClick={handleCancelEdit} style={{ padding: '8px 16px' }}>
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <h1 style={{ margin: 0 }}>{project.name}</h1>
+            <button 
+              onClick={() => setIsEditingTitle(true)}
+              style={{ padding: '8px 16px' }}
+            >
+              Edit Title
+            </button>
+          </>
+        )}
+      </div>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
         <thead>
@@ -111,7 +171,7 @@ function ProjectBuilder() {
               </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px', fontWeight: 'bold' }}>Total Power Draw:</td>
+              <td style={{ padding: '8px', fontWeight: 'bold' }}>Estimated Power Consumption:</td>
               <td style={{ padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>
                 {project.total_power} W
               </td>

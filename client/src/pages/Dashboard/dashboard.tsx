@@ -47,7 +47,6 @@ function Dashboard() {
             <div 
                 key={project.project_id} 
                 className="project-card"
-                onClick={() => goToWorkSpace(project.project_id)}
             >
                 <div className="project-card-content">
                     <h3>{project.name}</h3>
@@ -56,13 +55,22 @@ function Dashboard() {
                     <small>ID: {project.project_id}</small>
                 </div>
                 
-                <button 
-                    type="button" 
-                    className="btn-delete"
-                    onClick={(e) => handleDeleteClick(e, project.project_id, project.name)}
-                >
-                    Delete Build
-                </button>
+                <div className="project-card-actions">
+                    <button 
+                        type="button" 
+                        className="btn-edit"
+                        onClick={() => goToWorkSpace(project.project_id)}
+                    >
+                        Edit Build
+                    </button>
+                    <button 
+                        type="button" 
+                        className="btn-delete"
+                        onClick={(e) => handleDeleteClick(e, project.project_id, project.name)}
+                    >
+                        Delete Build
+                    </button>
+                </div>
             </div>
         );
     };

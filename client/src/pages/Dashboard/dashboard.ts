@@ -43,9 +43,13 @@ export async function createProject(projectName: string): Promise<boolean> {
             credentials: 'include'
         });
 
-        return response.ok;
+        if (!response.ok) {
+            console.error("Failed to create project:", response.statusText);
+            return false;
+        }
+        return true;
     } catch (err) {
-        console.error("Network error during login:", err);
+        console.error("Network error during project creation:", err);
         return false;
     }
 }
@@ -58,9 +62,13 @@ export async function deleteProject(projectId: number): Promise<boolean> {
             credentials: 'include'
         });
 
-        return response.ok;
+        if (!response.ok) {
+            console.error("Failed to delete project:", response.statusText);
+            return false;
+        }
+        return true;
     } catch (err) {
-        console.error("Network error during login:", err);
+        console.error("Network error during project deletion:", err);
         return false;
     }
 }

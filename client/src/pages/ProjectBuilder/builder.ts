@@ -66,9 +66,7 @@ export const fetchProjectData = async (projectId: string | undefined): Promise<P
     throw new Error('Project ID is required');
   }
 
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/projects/${projectId}`,
-    {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}`, {
       method: 'GET',
       credentials: 'include'
     }
@@ -78,7 +76,24 @@ export const fetchProjectData = async (projectId: string | undefined): Promise<P
     throw new Error('Failed to fetch project data');
   }
 
-  return await response.json();
+  const data = await response.json();
+  
+  // Ensure numeric fields are actually numbers
+  return {
+    ...data,
+    project_id: Number(data.project_id),
+    total_price: Number(data.total_price),
+    total_power: Number(data.total_power),
+    user_id: Number(data.user_id),
+    cpu_id: data.cpu_id !== null ? Number(data.cpu_id) : null,
+    cooler_id: data.cooler_id !== null ? Number(data.cooler_id) : null,
+    gpu_id: data.gpu_id !== null ? Number(data.gpu_id) : null,
+    memory_id: data.memory_id !== null ? Number(data.memory_id) : null,
+    motherboard_id: data.motherboard_id !== null ? Number(data.motherboard_id) : null,
+    psu_id: data.psu_id !== null ? Number(data.psu_id) : null,
+    storage_id: data.storage_id !== null ? Number(data.storage_id) : null,
+    chassis_id: data.chassis_id !== null ? Number(data.chassis_id) : null
+  };
 };
 
 export const fetchProjectDataDummy = (projectId: string | undefined): Promise<ProjectData> => {
@@ -118,4 +133,22 @@ export const getComponentsList = (project: ProjectData): Component[] => {
     ...component,
     id: project[`${component.key}_id` as keyof ProjectData] as number | null
   }));
+};
+
+export const updateProjectName = async (projectId: number, newName: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name: newName }),
+      credentials: 'include'
+    });
+
+    return response.ok;
+  } catch (err) {
+    console.error('Network error during project update:', err);
+    return false;
+  }
 };

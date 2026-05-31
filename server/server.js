@@ -24,6 +24,7 @@ app.use(cookieParser());
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
+    password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
     port: process.env.DB_PORT || 5432, 
 });
@@ -181,6 +182,66 @@ app.get('/api/GET/projects', authenticateToken, async (req, res) => {
     }
 })
 
+//GET
+app.get('/api/projects/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.userId;
+
+        const sqlQuery = `
+            SELECT *
+            FROM project
+            WHERE project_id = $1 AND user_id = $2
+        `;
+
+        const result = await pool.query(sqlQuery, [id, userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Project not found or unauthorized" });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.log("GET PROJECT BY ID ERROR", err.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+})
+
+//PUT
+app.put('/api/projects/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+        const userId = req.userId;
+
+        if (!name || name.trim() === "") {
+            return res.status(400).json({ success: false, message: "Project name is required" });
+        }
+
+        const sqlQuery = `
+            UPDATE project
+            SET name = $1
+            WHERE project_id = $2 AND user_id = $3
+            RETURNING *;
+        `;
+
+        const result = await pool.query(sqlQuery, [name.trim(), id, userId]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ success: false, message: "Project not found or unauthorized" });
+        }
+
+        res.json({ success: true, message: "Project updated successfully", project: result.rows[0] });
+    } catch (err) {
+        console.error("UPDATE PROJECT ERROR", err.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+})
 
 //DELETE
 app.delete('/api/DELETE/projects/:id', authenticateToken, async (req, res) => {
