@@ -213,21 +213,87 @@ app.get('/api/projects/:id', authenticateToken, async (req, res) => {
 app.put('/api/projects/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, total_price, total_power, cpu_id, cooler_id, gpu_id, memory_id, motherboard_id, psu_id, storage_id, chassis_id } = req.body;
         const userId = req.userId;
 
-        if (!name || name.trim() === "") {
-            return res.status(400).json({ success: false, message: "Project name is required" });
+        // Build dynamic update query
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (name !== undefined) {
+            if (!name || name.trim() === "") {
+                return res.status(400).json({ success: false, message: "Project name is required" });
+            }
+            updates.push(`name = $${paramCount++}`);
+            values.push(name.trim());
         }
+
+        if (total_price !== undefined) {
+            updates.push(`total_price = $${paramCount++}`);
+            values.push(total_price);
+        }
+
+        if (total_power !== undefined) {
+            updates.push(`total_power = $${paramCount++}`);
+            values.push(total_power);
+        }
+
+        if (cpu_id !== undefined) {
+            updates.push(`cpu_id = $${paramCount++}`);
+            values.push(cpu_id);
+        }
+
+        if (cooler_id !== undefined) {
+            updates.push(`cooler_id = $${paramCount++}`);
+            values.push(cooler_id);
+        }
+
+        if (gpu_id !== undefined) {
+            updates.push(`gpu_id = $${paramCount++}`);
+            values.push(gpu_id);
+        }
+
+        if (memory_id !== undefined) {
+            updates.push(`memory_id = $${paramCount++}`);
+            values.push(memory_id);
+        }
+
+        if (motherboard_id !== undefined) {
+            updates.push(`motherboard_id = $${paramCount++}`);
+            values.push(motherboard_id);
+        }
+
+        if (psu_id !== undefined) {
+            updates.push(`psu_id = $${paramCount++}`);
+            values.push(psu_id);
+        }
+
+        if (storage_id !== undefined) {
+            updates.push(`storage_id = $${paramCount++}`);
+            values.push(storage_id);
+        }
+
+        if (chassis_id !== undefined) {
+            updates.push(`chassis_id = $${paramCount++}`);
+            values.push(chassis_id);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ success: false, message: "No fields to update" });
+        }
+
+        values.push(id);
+        values.push(userId);
 
         const sqlQuery = `
             UPDATE project
-            SET name = $1
-            WHERE project_id = $2 AND user_id = $3
+            SET ${updates.join(', ')}
+            WHERE project_id = $${paramCount++} AND user_id = $${paramCount++}
             RETURNING *;
         `;
 
-        const result = await pool.query(sqlQuery, [name.trim(), id, userId]);
+        const result = await pool.query(sqlQuery, values);
 
         if (result.rowCount === 0) {
             return res.status(404).json({ success: false, message: "Project not found or unauthorized" });

@@ -8,7 +8,8 @@ import {
   handleAddPart as onAddPart,
   getComponentData,
   getComponentsList,
-  updateProjectName
+  updateProjectName,
+  saveProject
 } from './builder';
 import { useNavigationUtils } from '../../util/util';
 
@@ -66,6 +67,16 @@ function ProjectBuilder() {
   const handleCancelEdit = () => {
     setEditedTitle(project?.name || '');
     setIsEditingTitle(false);
+  };
+
+  const handleSaveProject = async () => {
+    if (!project) return;
+    const success = await saveProject(project);
+    if (success) {
+      alert('Project saved successfully!');
+    } else {
+      alert('Failed to save project');
+    }
   };
 
   if (loading) {
@@ -178,6 +189,14 @@ function ProjectBuilder() {
             </tr>
           </tbody>
         </table>
+        <div style={{ marginTop: '15px', textAlign: 'right' }}>
+          <button 
+            onClick={handleSaveProject}
+            style={{ padding: '10px 20px', fontSize: '16px', fontWeight: 'bold', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Save Project
+          </button>
+        </div>
       </div>
     </div>
   );

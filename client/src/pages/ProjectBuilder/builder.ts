@@ -152,3 +152,33 @@ export const updateProjectName = async (projectId: number, newName: string): Pro
     return false;
   }
 };
+
+export const saveProject = async (project: ProjectData): Promise<boolean> => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${project.project_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: project.name,
+        total_price: project.total_price,
+        total_power: project.total_power,
+        cpu_id: project.cpu_id,
+        cooler_id: project.cooler_id,
+        gpu_id: project.gpu_id,
+        memory_id: project.memory_id,
+        motherboard_id: project.motherboard_id,
+        psu_id: project.psu_id,
+        storage_id: project.storage_id,
+        chassis_id: project.chassis_id
+      }),
+      credentials: 'include'
+    });
+
+    return response.ok;
+  } catch (err) {
+    console.error('Network error during project save:', err);
+    return false;
+  }
+};
