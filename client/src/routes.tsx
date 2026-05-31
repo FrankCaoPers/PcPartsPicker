@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Login from './pages/Login/login.tsx';
 import SignUp from './pages/SignUp/signup.tsx';
 import Dashboard from './pages/Dashboard/dashboard.tsx';
-import ProjectWorkSpace from './pages/ProjectWorkSpace/projectWorkSpace.tsx';
+import ProjectBuilder from './pages/ProjectBuilder/builder.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -22,8 +22,8 @@ export const router = createBrowserRouter([
     element: <Dashboard/>
   },
   {
-    path: "/workspace/:id",
-    element: <ProjectWorkSpace/>
+    path: "/project/:projectId",
+    element: <ProjectBuilder/>
   },
   {
     path: "*",
