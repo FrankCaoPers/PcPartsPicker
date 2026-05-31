@@ -6,10 +6,12 @@ export function useNavigationUtils() {
     const goToSignup = () => navigate('/signup');
     const goToLogin = () => navigate('/login');
     const goToDashboard = () => navigate('/dashboard');
+    const goToWorkSpace = (projectId: number) => navigate(`/workspace/${projectId}`);
 
     return {
         goToSignup,
         goToLogin,
-        goToDashboard
+        goToDashboard,
+        goToWorkSpace
     };
 }

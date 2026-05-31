@@ -10,7 +10,7 @@ interface SignUpResult {
 
 export async function submitSignUpRequest(credentials: SignUpCredentials): Promise<SignUpResult> {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/signup`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/POST/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -25,8 +25,8 @@ export async function submitSignUpRequest(credentials: SignUpCredentials): Promi
         } else {
             return { success: false, message: data.message || "Sign up failed" };
         }
-    } catch (error) {
-        console.error("Network error during signup:", error);
+    } catch (err) {
+        console.error("Network error during signup:", err);
         return { success: false, message: "Cannot connect to server" };
     }
 }

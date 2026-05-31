@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const { Pool } = require('pg');
 const cors = require('cors');
 const jwt = require('jsonwebtoken')
+const authenticateToken = require('./helper')
 require('dotenv').config();
 
 
@@ -50,8 +51,8 @@ app.get('/api/cpus', async (req, res) => {
     }
 });
 
-
-app.post('/api/login', async (req, res) => {
+//POST
+app.post('/api/POST/login', async (req, res) => {
     try {
         let userId;
         let sessionToken;
@@ -84,7 +85,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-app.post('/api/signup', async (req, res) => {
+app.post('/api/POST/signup', async (req, res) => {
     try {
         const { username, password } = req.body;
 
@@ -113,7 +114,7 @@ app.post('/api/signup', async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: "User account created successfully!",
+            message: "User account created successfully",
             user: newUser
         });
 
@@ -126,17 +127,41 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-
-app.get('/api/projects', async (req, res) => {
+app.post('/api/POST/projects', authenticateToken, async (req, res) => {
     try {
-        const token = req.cookies.session_id
+        const {name} = req.body;
+        const userId = req.userId;
 
-        if (!token) {
-            return res.status(401).json({error: "Not logged in"});
+        if (!name || name.trim() === "") {
+            return res.status(400).json({ success: false, message: "Project name is required" });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const userId = decoded.userId;
+        const sqlQuery = `
+            INSERT INTO project (name, total_price, total_power, user_id)
+            VALUES ($1, 0, 0, $2)
+            RETURNING project_id;
+        `
+
+        const result = await pool.query(sqlQuery, [name.trim(), userId]);
+
+        return res.status(201).json({
+            success:true,
+            message: "Project created successfully",
+        })
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
+    }
+})
+
+
+//GET
+app.get('/api/GET/projects', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
 
         const sqlQuery = `
             SELECT *
@@ -153,6 +178,32 @@ app.get('/api/projects', async (req, res) => {
             success: false, 
             message: "Internal Server Error" 
         });
+    }
+})
+
+
+//DELETE
+app.delete('/api/DELETE/projects/:id', authenticateToken, async (req, res) => {
+    try {
+        const {id} = req.params;
+        const userId = req.userId;
+
+        const sqlQuery = `
+            DELETE FROM project
+            WHERE project_id = $1 AND user_id = $2
+            RETURNING *;
+        `;
+
+        const result = await pool.query(sqlQuery, [id, userId]);
+
+        if (result.rowCount === 0) {
+            return res.status(444).json({ error: "Project not found or unauthorized" });
+        }
+        res.json({ success: true, message: "Project deleted successfully" });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({error: "Server Error"});
     }
 })
 

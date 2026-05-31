@@ -5,7 +5,7 @@ interface LoginCredentials {
 
 export async function submitLoginRequest(credentials: LoginCredentials): Promise<boolean> {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/POST/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -15,8 +15,8 @@ export async function submitLoginRequest(credentials: LoginCredentials): Promise
         });
 
         return response.ok; 
-    } catch (error) {
-        console.error("Network error during login:", error);
+    } catch (err) {
+        console.error("Network error during login:", err);
         return false;
     }
 }
