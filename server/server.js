@@ -1,7 +1,10 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const { Pool } = require('pg');
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 require('dotenv').config();
+
 
 const corsOptions = {
     origin: process.env.FRONTEND_ORIGIN,
@@ -10,9 +13,12 @@ const corsOptions = {
     credentials: true
 };
 
+
 const app = express();
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
+
 
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -26,6 +32,14 @@ pool.on('error', (err, client) => {
 });
 
 
+const cookieSettings = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000
+};
+
+
 app.get('/api/cpus', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM cpu ORDER BY price ASC');
@@ -36,17 +50,30 @@ app.get('/api/cpus', async (req, res) => {
     }
 });
 
+
 app.post('/api/login', async (req, res) => {
     try {
-        const {username, password} = req.body
+        let userId;
+        let sessionToken;
+        const {username, password} = req.body;
         const sqlQuery = `
-            SELECT username, password
+            SELECT *
             FROM users
             WHERE username = $1 AND password = $2;
         `
         const result = await pool.query(sqlQuery, [username, password])
+
         if (result.rows.length > 0) {
-            res.json({ success: true, message: "Login successful!", user: result.rows[0] });
+            userId = result.rows[0].user_id;
+            sessionToken = jwt.sign(
+                {userId: userId},
+                process.env.JWT_SECRET,
+                {expiresIn: '1d'}
+            );
+
+            res.cookie('session_id', sessionToken, {...cookieSettings})
+            res.json({ success: true, message: "Login successful!"});
+
         } else {
             res.status(401).json({ success: false, message: "Invalid username or password" });
         }
@@ -55,6 +82,7 @@ app.post('/api/login', async (req, res) => {
         res.status(500).send('Server Error')
     }
 });
+
 
 app.post('/api/signup', async (req, res) => {
     try {
@@ -79,8 +107,8 @@ app.post('/api/signup', async (req, res) => {
             VALUES ($1, $2)
             RETURNING user_id, username; 
         `;
+
         const result = await pool.query(sqlQuery, [username, password]);
-        
         const newUser = result.rows[0];
 
         return res.status(201).json({
@@ -97,6 +125,37 @@ app.post('/api/signup', async (req, res) => {
         });
     }
 });
+
+
+app.get('/api/projects', async (req, res) => {
+    try {
+        const token = req.cookies.session_id
+
+        if (!token) {
+            return res.status(401).json({error: "Not logged in"});
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.userId;
+
+        const sqlQuery = `
+            SELECT *
+            FROM project
+            WHERE user_id = $1
+        `;
+
+        const result = await pool.query(sqlQuery, [userId]);
+        res.json(result.rows);
+
+    } catch (err) {
+        console.log("GET PROJECTS ERROR", err.message)
+        return res.status(500).json({ 
+            success: false, 
+            message: "Internal Server Error" 
+        });
+    }
+})
+
 
 const PORT = process.env.PORT || 5001;
 const server = app.listen(PORT, () => {

@@ -1,12 +1,10 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom";
-
+import { useNavigationUtils } from "../../util/util";
 
 function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    let navigate = useNavigate();
-
+    const { goToSignup, goToDashboard } = useNavigationUtils()
 
     const handleSubmit = async (event: React.SubmitEvent) => {
         event.preventDefault();
@@ -16,17 +14,16 @@ function Login() {
                 'Content-Type': 'application/json',
                 
             },
-            body: JSON.stringify({username, password})
+            body: JSON.stringify({username, password}),
+            credentials: 'include'
         })
-        
+
+        if(response.ok) {
+            goToDashboard()
+        }
+
         
         console.log(`Logging in with username: ${username} and password: ${password}`);
-    }
-
-
-    const routeChange = () => {
-        let signUpPage = '/signup';
-        navigate(signUpPage);
     }
 
     return (
@@ -41,7 +38,6 @@ function Login() {
                     onChange={(e) => setUsername(e.target.value)} 
                 />
             </div>
-    
             <div>
                 <label htmlFor="password">Password</label>
                 <input 
@@ -53,7 +49,7 @@ function Login() {
                 />
             </div>
             <button type="submit">Login</button>
-            <button onClick={routeChange}>Sign Up</button>
+            <button onClick={goToSignup}>Sign Up</button>
         </form>
     )
 }

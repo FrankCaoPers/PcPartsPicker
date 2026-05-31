@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigationUtils } from "../../util/util";
+
 
 function SignUp() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
-    let navigate = useNavigate();
+    const { goToLogin } = useNavigationUtils();
 
 
     const handleSubmit = async (event: React.SubmitEvent) => {
@@ -36,11 +37,6 @@ function SignUp() {
         }
     }
 
-    const routeChange = () => {
-        let loginPage = '/login';
-        navigate(loginPage);
-    }
-
     const messageClass = message.includes('successful') ? 'message-success' : 'message-error';
 
     return (
@@ -69,7 +65,7 @@ function SignUp() {
                 </div>
                 <div className="form-actions">
                     <button type="submit" className="btn-submit">Sign Up</button>
-                    <button type="button" onClick={routeChange} className="btn-link">Log In</button>
+                    <button type="button" onClick={goToLogin} className="btn-link">Log In</button>
                 </div>
             </form>
 
