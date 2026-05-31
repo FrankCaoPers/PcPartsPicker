@@ -7,7 +7,7 @@ function Login() {
     const [password, setPassword] = useState("");
     const { goToSignup, goToDashboard } = useNavigationUtils();
 
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleSubmit = async (event: React.SubmitEvent) => {
         event.preventDefault();
         
         const isSuccess = await submitLoginRequest({ username, password });
