@@ -23,5 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-server/.env
-client/.env
+**/.env
+**/node_modules
+**/*.sql
