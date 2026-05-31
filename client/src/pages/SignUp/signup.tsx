@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigationUtils } from "../../util/util";
-
+import { submitSignUpRequest } from "./signup";
 
 function SignUp() {
     const [username, setUsername] = useState("");
@@ -8,34 +8,19 @@ function SignUp() {
     const [message, setMessage] = useState("");
     const { goToLogin } = useNavigationUtils();
 
-
-    const handleSubmit = async (event: React.SubmitEvent) => {
+    const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         setMessage("");
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/signup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    
-                },
-                body: JSON.stringify({username, password})
-            })
 
-            const data = await response.json();
+        const result = await submitSignUpRequest({ username, password });
 
-            if (response.ok) {
-                    setMessage("Sign up successful!"); 
-                    setUsername('');
-                    setPassword('');
-                } else {
-                    setMessage(data.message || "Sign up failed. Please try again.");
-                }
-        } catch (err) {
-            console.error("Network error:", err);
-            setMessage("Cannot connect to server. Is the backend running?");
+        setMessage(result.message);
+
+        if (result.success) {
+            setUsername('');
+            setPassword('');
         }
-    }
+    };
 
     const messageClass = message.includes('successful') ? 'message-success' : 'message-error';
 
@@ -77,4 +62,5 @@ function SignUp() {
         </div>
     );
 }
-export default SignUp;
+
+export default SignUp
