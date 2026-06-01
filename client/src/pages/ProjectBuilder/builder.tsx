@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import type { ProjectData } from './builder';
 import {
-  fetchProjectData,
+  fetchProjectDataWithComponentDetails,
   fetchProjectDataDummy,
-  handleChangePart as onChangePart,
-  handleAddPart as onAddPart,
   getComponentData,
   getComponentsList,
   updateProjectName,
-  saveProject
+  saveProject,
+  clearProjectComponent
 } from './builder';
 import { useNavigationUtils } from '../../util/util';
 
@@ -18,6 +17,8 @@ const USE_DUMMY_DATA = false;
 
 function ProjectBuilder() {
   const { projectId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,7 @@ function ProjectBuilder() {
         setLoading(true);
         const data = USE_DUMMY_DATA
           ? await fetchProjectDataDummy(projectId)
-          : await fetchProjectData(projectId);
+          : await fetchProjectDataWithComponentDetails(projectId);
         setProject(data);
         setEditedTitle(data.name);
         setError(null);
@@ -44,10 +45,17 @@ function ProjectBuilder() {
     };
 
     loadProject();
-  }, [projectId]);
+  }, [projectId, location.key]);
 
-  const handleChangePart = (componentType: string) => onChangePart(componentType);
-  const handleAddPart = (componentType: string) => onAddPart(componentType);
+  const goToSelector = (componentKey: string) => {
+    if (!projectId) return;
+    navigate(`/project/${projectId}/select/${componentKey}`, {
+      state: { project }
+    });
+  };
+
+  const handleChangePart = goToSelector;
+  const handleAddPart = goToSelector;
 
   const handleSaveTitle = async () => {
     if (!project || !editedTitle.trim()) {
@@ -77,6 +85,21 @@ function ProjectBuilder() {
     } else {
       alert('Failed to save project');
     }
+  };
+
+  const handleRemovePart = async (componentKey: string) => {
+    if (!project) return;
+
+    const success = await clearProjectComponent(project.project_id, componentKey);
+    if (!success) {
+      alert(`Unable to remove ${componentKey}.`);
+      return;
+    }
+
+    const updatedProject = { ...project } as ProjectData & Record<string, any>;
+    updatedProject[`${componentKey}_id`] = null;
+    updatedProject[componentKey] = undefined;
+    setProject(updatedProject);
   };
 
   if (loading) {
@@ -158,12 +181,29 @@ function ProjectBuilder() {
                   <button
                     onClick={() =>
                       hasComponent
-                        ? handleChangePart(component.type)
-                        : handleAddPart(component.type)
+                        ? handleChangePart(component.key)
+                        : handleAddPart(component.key)
                     }
+                    style={{ marginRight: hasComponent ? '8px' : 0 }}
                   >
                     {hasComponent ? 'Change' : 'Add'}
                   </button>
+                  {hasComponent && (
+                    <button
+                      onClick={() => handleRemovePart(component.key)}
+                      style={{
+                        marginLeft: '8px',
+                        padding: '8px 12px',
+                        backgroundColor: '#e74c3c',
+                        color: 'white',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
                 </td>
               </tr>
             );

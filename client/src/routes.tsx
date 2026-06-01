@@ -3,6 +3,7 @@ import Login from './pages/Login/login.tsx';
 import SignUp from './pages/SignUp/signup.tsx';
 import Dashboard from './pages/Dashboard/dashboard.tsx';
 import ProjectBuilder from './pages/ProjectBuilder/builder.tsx';
+import ComponentSelector from './pages/ComponentSelector/selector.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
   {
     path: "/project/:projectId",
     element: <ProjectBuilder/>
+  },
+  {
+    path: "/project/:projectId/select/:componentKey",
+    element: <ComponentSelector/>
   },
   {
     path: "*",

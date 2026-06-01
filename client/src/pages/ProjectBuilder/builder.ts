@@ -77,6 +77,7 @@ export const fetchProjectData = async (projectId: string | undefined): Promise<P
   }
 
   const data = await response.json();
+  console.log(data);
   
   // Ensure numeric fields are actually numbers
   return {
@@ -94,6 +95,54 @@ export const fetchProjectData = async (projectId: string | undefined): Promise<P
     storage_id: data.storage_id !== null ? Number(data.storage_id) : null,
     chassis_id: data.chassis_id !== null ? Number(data.chassis_id) : null
   };
+};
+
+export const fetchCpuDetails = async (cpuId: number): Promise<{ name: string; price: number }> => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cpus/${cpuId}`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch CPU details');
+  }
+
+  const data = await response.json();
+  return {
+    name: data.name,
+    price: Number(data.price)
+  };
+};
+
+export const fetchMotherboardDetails = async (motherboardId: number): Promise<{ name: string; price: number }> => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/motherboards/${motherboardId}`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch motherboard details');
+  }
+
+  const data = await response.json();
+  return {
+    name: data.name,
+    price: Number(data.price)
+  };
+};
+
+export const fetchProjectDataWithComponentDetails = async (projectId: string | undefined): Promise<ProjectData> => {
+  const project = await fetchProjectData(projectId);
+
+  if (project.cpu_id) {
+    project.cpu = await fetchCpuDetails(project.cpu_id);
+  }
+
+  if (project.motherboard_id) {
+    project.motherboard = await fetchMotherboardDetails(project.motherboard_id);
+  }
+
+  return project;
 };
 
 export const fetchProjectDataDummy = (projectId: string | undefined): Promise<ProjectData> => {
@@ -179,6 +228,26 @@ export const saveProject = async (project: ProjectData): Promise<boolean> => {
     return response.ok;
   } catch (err) {
     console.error('Network error during project save:', err);
+    return false;
+  }
+};
+
+export const clearProjectComponent = async (projectId: number, componentKey: string): Promise<boolean> => {
+  const fieldName = `${componentKey}_id`;
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ [fieldName]: null })
+    });
+
+    return response.ok;
+  } catch (err) {
+    console.error('Network error during component removal:', err);
     return false;
   }
 };

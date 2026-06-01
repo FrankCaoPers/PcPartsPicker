@@ -52,6 +52,130 @@ app.get('/api/cpus', async (req, res) => {
     }
 });
 
+app.get('/api/motherboards', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM motherboard ORDER BY price ASC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/cpus/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query('SELECT * FROM cpu WHERE cpu_id = $1', [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'CPU not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/motherboards/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query('SELECT * FROM motherboard WHERE motherboard_id = $1', [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Motherboard not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/compatible/cpus/:projectId', async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const projectResult = await pool.query('SELECT motherboard_id FROM project WHERE project_id = $1', [projectId]);
+
+        if (projectResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Project not found' });
+        }
+
+        const { motherboard_id } = projectResult.rows[0];
+
+        if (!motherboard_id) {
+            const allCpus = await pool.query('SELECT * FROM cpu ORDER BY price ASC');
+            return res.json(allCpus.rows);
+        }
+
+        const compatibleResult = await pool.query(`
+            SELECT c.*
+            FROM cpu c
+            WHERE c.socket = (
+                SELECT m.socket
+                FROM project p
+                JOIN motherboard m ON p.motherboard_id = m.motherboard_id
+                WHERE p.project_id = $1
+            )
+            AND c.chipset = (
+                SELECT m.chipset
+                FROM project p
+                JOIN motherboard m ON p.motherboard_id = m.motherboard_id
+                WHERE p.project_id = $1
+            )
+            ORDER BY c.price ASC
+        `, [projectId]);
+
+        res.json(compatibleResult.rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/compatible/motherboards/:projectId', async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const projectResult = await pool.query('SELECT cpu_id FROM project WHERE project_id = $1', [projectId]);
+
+        if (projectResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Project not found' });
+        }
+
+        const { cpu_id } = projectResult.rows[0];
+
+        if (!cpu_id) {
+            const allMotherboards = await pool.query('SELECT * FROM motherboard ORDER BY price ASC');
+            return res.json(allMotherboards.rows);
+        }
+
+        const compatibleResult = await pool.query(`
+            SELECT m.*
+            FROM motherboard m
+            WHERE m.socket = (
+                SELECT c.socket
+                FROM project p
+                JOIN cpu c ON p.cpu_id = c.cpu_id
+                WHERE p.project_id = $1
+            )
+            AND m.chipset = (
+                SELECT c.chipset
+                FROM project p
+                JOIN cpu c ON p.cpu_id = c.cpu_id
+                WHERE p.project_id = $1
+            )
+            ORDER BY m.price ASC
+        `, [projectId]);
+
+        res.json(compatibleResult.rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 //POST
 app.post('/api/POST/login', async (req, res) => {
     try {
