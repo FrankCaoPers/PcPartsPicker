@@ -8,7 +8,8 @@ import {
   getComponentsList,
   updateProjectName,
   saveProject,
-  clearProjectComponent
+  clearProjectComponent,
+  calculateTotalPrice
 } from './builder';
 import { useNavigationUtils } from '../../util/util';
 
@@ -99,6 +100,7 @@ function ProjectBuilder() {
     const updatedProject = { ...project } as ProjectData & Record<string, any>;
     updatedProject[`${componentKey}_id`] = null;
     updatedProject[componentKey] = undefined;
+    updatedProject.total_price = calculateTotalPrice(updatedProject);
     setProject(updatedProject);
   };
 

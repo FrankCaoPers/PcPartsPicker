@@ -77,7 +77,6 @@ export const fetchProjectData = async (projectId: string | undefined): Promise<P
   }
 
   const data = await response.json();
-  console.log(data);
   
   // Ensure numeric fields are actually numbers
   return {
@@ -131,6 +130,14 @@ export const fetchMotherboardDetails = async (motherboardId: number): Promise<{ 
   };
 };
 
+export const calculateTotalPrice = (project: ProjectData): number => {
+  const componentKeys = ['cpu', 'motherboard', 'memory', 'gpu', 'psu', 'cooler', 'storage', 'chassis'] as const;
+  return componentKeys.reduce((total, key) => {
+    const component = project[key] as { name: string; price: number } | undefined;
+    return total + (component?.price ?? 0);
+  }, 0);
+};
+
 export const fetchProjectDataWithComponentDetails = async (projectId: string | undefined): Promise<ProjectData> => {
   const project = await fetchProjectData(projectId);
 
@@ -141,6 +148,8 @@ export const fetchProjectDataWithComponentDetails = async (projectId: string | u
   if (project.motherboard_id) {
     project.motherboard = await fetchMotherboardDetails(project.motherboard_id);
   }
+
+  project.total_price = calculateTotalPrice(project);
 
   return project;
 };
