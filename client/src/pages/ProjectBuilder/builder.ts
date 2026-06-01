@@ -96,31 +96,14 @@ export const fetchProjectData = async (projectId: string | undefined): Promise<P
   };
 };
 
-export const fetchCpuDetails = async (cpuId: number): Promise<{ name: string; price: number }> => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/cpus/${cpuId}`, {
+export const fetchComponentDetails = async (endpoint: string, id: number): Promise<{ name: string; price: number }> => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/${endpoint}/${id}`, {
     method: 'GET',
     credentials: 'include'
   });
 
   if (!response.ok) {
-    throw new Error('Failed to fetch CPU details');
-  }
-
-  const data = await response.json();
-  return {
-    name: data.name,
-    price: Number(data.price)
-  };
-};
-
-export const fetchMotherboardDetails = async (motherboardId: number): Promise<{ name: string; price: number }> => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/motherboards/${motherboardId}`, {
-    method: 'GET',
-    credentials: 'include'
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch motherboard details');
+    throw new Error(`Failed to fetch details for ${endpoint}`);
   }
 
   const data = await response.json();
@@ -141,12 +124,30 @@ export const calculateTotalPrice = (project: ProjectData): number => {
 export const fetchProjectDataWithComponentDetails = async (projectId: string | undefined): Promise<ProjectData> => {
   const project = await fetchProjectData(projectId);
 
-  if (project.cpu_id) {
-    project.cpu = await fetchCpuDetails(project.cpu_id);
-  }
+  // Map your state keys to your backend API endpoints
+  const endpoints: Record<string, string> = {
+    cpu: 'cpus',
+    motherboard: 'motherboards',
+    memory: 'memory',
+    gpu: 'gpus',          
+    psu: 'psus',          
+    cooler: 'coolers',  
+    storage: 'storage',
+    chassis: 'chassis'
+  };
 
-  if (project.motherboard_id) {
-    project.motherboard = await fetchMotherboardDetails(project.motherboard_id);
+  // Dynamically fetch details for every part that has an ID saved in the project
+  for (const [key, endpoint] of Object.entries(endpoints)) {
+    const idField = `${key}_id` as keyof ProjectData;
+    const componentId = project[idField] as number | null;
+    
+    if (componentId) {
+      try {
+        (project as any)[key] = await fetchComponentDetails(endpoint, componentId);
+      } catch (err) {
+        console.error(`Error loading ${key}:`, err);
+      }
+    }
   }
 
   project.total_price = calculateTotalPrice(project);

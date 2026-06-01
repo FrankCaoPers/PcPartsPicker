@@ -1,6 +1,6 @@
 import type { ProjectData } from '../ProjectBuilder/builder';
 
-export type ComponentKey = 'cpu' | 'motherboard';
+export type ComponentKey = 'cpu' | 'motherboard' | 'memory' | 'gpu' | 'psu' | 'cooler' | 'storage' | 'chassis';
 
 export interface SelectorItem {
   [key: string]: any;
@@ -11,7 +11,7 @@ export interface ComponentConfig {
   idField: string;
   allEndpoint: string;
   compatibleEndpoint: string;
-  projectField: 'cpu_id' | 'motherboard_id';
+  projectField: 'cpu_id' | 'motherboard_id' | 'memory_id' | 'gpu_id' | 'psu_id' | 'cooler_id' | 'storage_id' | 'chassis_id';
   summaryFields: string[];
 }
 
@@ -31,6 +31,54 @@ export const componentConfigs: Record<ComponentKey, ComponentConfig> = {
     compatibleEndpoint: '/api/compatible/motherboards',
     projectField: 'motherboard_id',
     summaryFields: ['name', 'manufacturer', 'form_factor', 'socket', 'chipset', 'ram_slots', 'pcie_slots', 'price', 'power_draw']
+  },
+  memory: {
+    label: 'Memory (RAM)',
+    idField: 'memory_id',
+    allEndpoint: '/api/memory',
+    compatibleEndpoint: '/api/compatible/memory',
+    projectField: 'memory_id',
+    summaryFields: ['name', 'manufacturer', 'type_memory', 'speed', 'modules', 'price']
+  },
+  gpu: {
+    label: 'Video Card (GPU)',
+    idField: 'gpu_id',
+    allEndpoint: '/api/gpus',
+    compatibleEndpoint: '/api/compatible/gpus',
+    projectField: 'gpu_id',
+    summaryFields: ['name', 'manufacturer', 'chipset', 'memory', 'core_clock', 'length', 'price', 'power_draw']
+  },
+  psu: {
+    label: 'Power Supply',
+    idField: 'psu_id',
+    allEndpoint: '/api/psus',
+    compatibleEndpoint: '/api/compatible/psus',
+    projectField: 'psu_id',
+    summaryFields: ['name', 'manufacturer', 'type_psu', 'efficiency', 'wattage', 'price']
+  },
+  cooler: {
+    label: 'CPU Cooler',
+    idField: 'cooler_id',
+    allEndpoint: '/api/coolers',
+    compatibleEndpoint: '/api/compatible/coolers',
+    projectField: 'cooler_id',
+    summaryFields: ['name', 'manufacturer', 'type_cooler', 'size_cooler', 'price']
+  },
+  storage: {
+    label: 'Storage',
+    idField: 'storage_id',
+    allEndpoint: '/api/storage',
+    compatibleEndpoint: '/api/compatible/storage',
+    projectField: 'storage_id',
+    summaryFields: ['name', 'manufacturer', 'capacity', 'type_storage', 'form_factor', 'price']
+  },
+  chassis: {
+    label: 'Chassis (Case)',
+    idField: 'chassis_id',
+    allEndpoint: '/api/chassis',
+    compatibleEndpoint: '/api/compatible/chassis',
+    projectField: 'chassis_id',
+    summaryFields: ['name', 'manufacturer', 'type_chassis', 'color', 'price']
   }
 };
 

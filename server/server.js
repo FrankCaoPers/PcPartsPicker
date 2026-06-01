@@ -176,6 +176,117 @@ app.get('/api/compatible/motherboards/:projectId', async (req, res) => {
     }
 });
 
+// dynamic code for selecting
+const newComponents = [
+    { route: 'memory', table: 'memory', idField: 'memory_id' },
+    { route: 'gpus', table: 'videocard', idField: 'gpu_id' },
+    { route: 'psus', table: 'powersupply', idField: 'psu_id' },
+    { route: 'coolers', table: 'cpucooler', idField: 'cooler_id' },
+    { route: 'storage', table: 'storage', idField: 'storage_id' },
+    { route: 'chassis', table: 'chassis', idField: 'chassis_id' }
+];
+
+newComponents.forEach(comp => {
+    // 1. Get all Parts
+    app.get(`/api/${comp.route}`, async (req, res) => {
+        try {
+            const result = await pool.query(`SELECT * FROM ${comp.table} ORDER BY price ASC`);
+            res.json(result.rows);
+        } catch (err) {
+            console.error(`Error fetching ${comp.route}:`, err.message);
+            res.status(500).send('Server Error');
+        }
+    });
+
+    // 2. Get Part by ID
+    app.get(`/api/${comp.route}/:id`, async (req, res) => {
+        try {
+            const { id } = req.params;
+            const result = await pool.query(`SELECT * FROM ${comp.table} WHERE ${comp.idField} = $1`, [id]);
+            if (result.rows.length === 0) {
+                return res.status(404).json({ success: false, message: 'Part not found' });
+            }
+            res.json(result.rows[0]);
+        } catch (err) {
+            console.error(`Error fetching ${comp.route} by ID:`, err.message);
+            res.status(500).send('Server Error');
+        }
+    });
+
+    // 3. Get Compatible Parts 
+    app.get(`/api/compatible/${comp.route}/:projectId`, async (req, res) => {
+        try {
+            const { projectId } = req.params;
+            
+            const projectResult = await pool.query('SELECT * FROM project WHERE project_id = $1', [projectId]);
+            if (projectResult.rows.length === 0) {
+                return res.status(404).json({ success: false, message: 'Project not found' });
+            }
+            const project = projectResult.rows[0];
+
+            let query = `SELECT * FROM ${comp.table}`;
+            let params = [];
+            let whereClauses = [];
+            let paramCount = 1;
+
+            if (comp.route === 'memory') {
+                if (project.motherboard_id) {
+                    query += ` JOIN Motherboard_Memory_Compatibility mmc ON mmc.memory_id = ${comp.table}.memory_id`;
+                    whereClauses.push(`mmc.motherboard_id = $${paramCount++}`);
+                    params.push(project.motherboard_id);
+                }
+            } else if (comp.route === 'gpus') {
+                if (project.chassis_id) {
+                    query += ` JOIN Chassis_Video_Card_Fitting cvcf ON cvcf.gpu_id = ${comp.table}.gpu_id`;
+                    whereClauses.push(`cvcf.chassis_id = $${paramCount++}`);
+                    params.push(project.chassis_id);
+                }
+            } else if (comp.route === 'psus') {
+                if (project.chassis_id) {
+                    query += ` JOIN Chassis_Power_Supply_Fitting cpsf ON cpsf.psu_id = ${comp.table}.psu_id`;
+                    whereClauses.push(`cpsf.chassis_id = $${paramCount++}`);
+                    params.push(project.chassis_id);
+                }
+            } else if (comp.route === 'coolers') {
+                if (project.chassis_id) {
+                    query += ` JOIN Chassis_Cooler_Fitting ccf ON ccf.cooler_id = ${comp.table}.cooler_id`;
+                    whereClauses.push(`ccf.chassis_id = $${paramCount++}`);
+                    params.push(project.chassis_id);
+                }
+            } else if (comp.route === 'chassis') {
+                if (project.motherboard_id) {
+                    query += ` JOIN Chassis_Motherboard_Fitting cmf ON cmf.chassis_id = ${comp.table}.chassis_id`;
+                    whereClauses.push(`cmf.motherboard_id = $${paramCount++}`);
+                    params.push(project.motherboard_id);
+                }
+            } else if (comp.route === 'storage') {
+                if (project.motherboard_id) {
+                    query += ` JOIN Motherboard_Storage_Compatibility msc ON msc.storage_id = ${comp.table}.storage_id`;
+                    whereClauses.push(`msc.motherboard_id = $${paramCount++}`);
+                    params.push(project.motherboard_id);
+                }
+                if (project.chassis_id) {
+                    query += ` JOIN Chassis_Storage_Fitting csf ON csf.storage_id = ${comp.table}.storage_id`;
+                    whereClauses.push(`csf.chassis_id = $${paramCount++}`);
+                    params.push(project.chassis_id);
+                }
+            }
+
+            if (whereClauses.length > 0) {
+                query += ` WHERE ` + whereClauses.join(' AND ');
+            }
+            query += ` ORDER BY price ASC`;
+
+            const result = await pool.query(query, params);
+            res.json(result.rows);
+
+        } catch (err) {
+            console.error(`Error fetching compatible ${comp.route}:`, err.message);
+            res.status(500).send('Server Error');
+        }
+    });
+});
+
 //POST
 app.post('/api/POST/login', async (req, res) => {
     try {
