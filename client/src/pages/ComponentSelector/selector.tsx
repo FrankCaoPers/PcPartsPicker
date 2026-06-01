@@ -29,6 +29,22 @@ function ComponentSelector() {
     return `${config.label} Selector`;
   }, [config]);
 
+  const tableFields = useMemo(() => {
+    if (!config) return [];
+
+    const availableFields = new Set(parts.flatMap((item) => Object.keys(item)));
+    return config.summaryFields.filter((field) => availableFields.has(field));
+  }, [config, parts]);
+
+  const formatValue = (value: unknown, field: string) => {
+    if (value === null || value === undefined) return '—';
+    if (field === 'price' && typeof value === 'number') return `$${value.toFixed(2)}`;
+    if (field === 'price' && !Number.isNaN(Number(value))) return `$${Number(value).toFixed(2)}`;
+    return String(value);
+  };
+
+  const getFieldLabel = (field: string) => field.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+
   useEffect(() => {
     const load = async () => {
       if (!config || !projectId) {
@@ -124,29 +140,39 @@ function ComponentSelector() {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th style={{ border: '1px solid', padding: '10px', textAlign: 'left' }}>Name</th>
-            <th style={{ border: '1px solid', padding: '10px', textAlign: 'left' }}>Manufacturer</th>
-            <th style={{ border: '1px solid', padding: '10px', textAlign: 'left' }}>Socket</th>
-            <th style={{ border: '1px solid', padding: '10px', textAlign: 'left' }}>Chipset</th>
-            <th style={{ border: '1px solid', padding: '10px', textAlign: 'right' }}>Price</th>
+            {tableFields.map((field) => (
+              <th
+                key={field}
+                style={{ border: '1px solid', padding: '10px', textAlign: field === 'price' ? 'right' : 'left' }}
+              >
+                {getFieldLabel(field)}
+              </th>
+            ))}
             <th style={{ border: '1px solid', padding: '10px', textAlign: 'center' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {parts.length === 0 ? (
             <tr>
-              <td colSpan={6} style={{ padding: '16px', textAlign: 'center' }}>
+              <td colSpan={tableFields.length + 1} style={{ padding: '16px', textAlign: 'center' }}>
                 No compatible {config.label.toLowerCase()}s found.
               </td>
             </tr>
           ) : (
             parts.map((item) => (
               <tr key={item[config.idField]}>
-                <td style={{ border: '1px solid', padding: '10px' }}>{item.name}</td>
-                <td style={{ border: '1px solid', padding: '10px' }}>{item.manufacturer}</td>
-                <td style={{ border: '1px solid', padding: '10px' }}>{item.socket ?? '—'}</td>
-                <td style={{ border: '1px solid', padding: '10px' }}>{item.chipset ?? '—'}</td>
-                <td style={{ border: '1px solid', padding: '10px', textAlign: 'right' }}>${Number(item.price).toFixed(2)}</td>
+                {tableFields.map((field) => (
+                  <td
+                    key={field}
+                    style={{
+                      border: '1px solid',
+                      padding: '10px',
+                      textAlign: field === 'price' ? 'right' : 'left'
+                    }}
+                  >
+                    {formatValue(item[field], field)}
+                  </td>
+                ))}
                 <td style={{ border: '1px solid', padding: '10px', textAlign: 'center' }}>
                   <button
                     onClick={() => handleViewDetails(item)}
