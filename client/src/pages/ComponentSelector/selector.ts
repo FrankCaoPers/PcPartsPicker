@@ -70,7 +70,7 @@ export const componentConfigs: Record<ComponentKey, ComponentConfig> = {
     allEndpoint: '/api/storage',
     compatibleEndpoint: '/api/compatible/storage',
     projectField: 'storage_id',
-    summaryFields: ['name', 'manufacturer', 'capacity', 'type_storage', 'form_factor', 'price']
+    summaryFields: ['name', 'manufacturer', 'storage_size', 'type_storage', 'form_factor', 'price']
   },
   chassis: {
     label: 'Chassis (Case)',
