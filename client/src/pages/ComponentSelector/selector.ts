@@ -38,7 +38,7 @@ export const componentConfigs: Record<ComponentKey, ComponentConfig> = {
     allEndpoint: '/api/memory',
     compatibleEndpoint: '/api/compatible/memory',
     projectField: 'memory_id',
-    summaryFields: ['name', 'manufacturer', 'type_memory', 'speed', 'modules', 'price']
+    summaryFields: ['name', 'manufacturer', 'ram_type', 'speed', 'modules', 'price']
   },
   gpu: {
     label: 'Video Card (GPU)',
