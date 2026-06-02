@@ -96,7 +96,7 @@ export const fetchProjectData = async (projectId: string | undefined): Promise<P
   };
 };
 
-export const fetchComponentDetails = async (endpoint: string, id: number): Promise<{ name: string; price: number }> => {
+export const fetchComponentDetails = async (endpoint: string, id: number): Promise<{ name: string; price: number; power_draw: number }> => {
   const response = await fetch(`${import.meta.env.VITE_API_URL}/api/${endpoint}/${id}`, {
     method: 'GET',
     credentials: 'include'
@@ -109,7 +109,8 @@ export const fetchComponentDetails = async (endpoint: string, id: number): Promi
   const data = await response.json();
   return {
     name: data.name,
-    price: Number(data.price)
+    price: Number(data.price),
+    power_draw: data.power_draw ? Number(data.power_draw) : 0 
   };
 };
 
@@ -118,6 +119,14 @@ export const calculateTotalPrice = (project: ProjectData): number => {
   return componentKeys.reduce((total, key) => {
     const component = project[key] as { name: string; price: number } | undefined;
     return total + (component?.price ?? 0);
+  }, 0);
+};
+
+export const calculateTotalPower = (project: ProjectData): number => {
+  const componentKeys = ['cpu', 'motherboard', 'memory', 'gpu', 'psu', 'cooler', 'storage', 'chassis'] as const;
+  return componentKeys.reduce((total, key) => {
+    const component = project[key] as { name: string; price: number; power_draw?: number } | undefined;
+    return total + (component?.power_draw ?? 0);
   }, 0);
 };
 
@@ -151,6 +160,7 @@ export const fetchProjectDataWithComponentDetails = async (projectId: string | u
   }
 
   project.total_price = calculateTotalPrice(project);
+  project.total_power = calculateTotalPower(project);
 
   return project;
 };
