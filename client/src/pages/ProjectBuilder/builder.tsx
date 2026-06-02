@@ -174,7 +174,7 @@ function ProjectBuilder() {
               <tr key={component.key}>
                 <td style={{ border: '1px solid', padding: '8px' }}>{component.type}</td>
                 <td style={{ border: '1px solid', padding: '8px' }}>
-                  {hasComponent ? componentData.name : 'Not Selected'}
+                  {hasComponent ? (componentData.manufacturer || 'Unknown Brand') : 'Not Selected'}
                 </td>
                 <td style={{ border: '1px solid', padding: '8px', textAlign: 'right' }}>
                   {hasComponent ? `$${componentData.price.toFixed(2)}` : '-'}

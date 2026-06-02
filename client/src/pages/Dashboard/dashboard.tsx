@@ -1,4 +1,3 @@
-// client/src/pages/dashboard/Dashboard.tsx
 import { useState, useEffect } from "react";
 import { getProjects, createProject, deleteProject, type ProjectRow } from "./dashboard";
 import { useNavigationUtils } from "../../util/util";

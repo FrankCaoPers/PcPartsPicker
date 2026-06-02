@@ -11,14 +11,15 @@ export interface ProjectData {
   psu_id: number | null;
   storage_id: number | null;
   chassis_id: number | null;
-  cpu?: { name: string; price: number };
-  cooler?: { name: string; price: number };
-  gpu?: { name: string; price: number };
-  memory?: { name: string; price: number };
-  motherboard?: { name: string; price: number };
-  psu?: { name: string; price: number };
-  storage?: { name: string; price: number };
-  chassis?: { name: string; price: number };
+  
+  cpu?: { name: string; price: number; manufacturer?: string };
+  cooler?: { name: string; price: number; manufacturer?: string };
+  gpu?: { name: string; price: number; manufacturer?: string };
+  memory?: { name: string; price: number; manufacturer?: string };
+  motherboard?: { name: string; price: number; manufacturer?: string };
+  psu?: { name: string; price: number; manufacturer?: string };
+  storage?: { name: string; price: number; manufacturer?: string };
+  chassis?: { name: string; price: number; manufacturer?: string };
 }
 
 export const DUMMY_PROJECT_DATA: ProjectData = {
@@ -96,7 +97,11 @@ export const fetchProjectData = async (projectId: string | undefined): Promise<P
   };
 };
 
-export const fetchComponentDetails = async (endpoint: string, id: number): Promise<{ name: string; price: number; power_draw: number }> => {
+export const fetchComponentDetails = async (
+  endpoint: string, 
+  id: number
+): Promise<{ name: string; price: number; power_draw: number; manufacturer: string }> => {
+  
   const response = await fetch(`${import.meta.env.VITE_API_URL}/api/${endpoint}/${id}`, {
     method: 'GET',
     credentials: 'include'
@@ -110,7 +115,9 @@ export const fetchComponentDetails = async (endpoint: string, id: number): Promi
   return {
     name: data.name,
     price: Number(data.price),
-    power_draw: data.power_draw ? Number(data.power_draw) : 0 
+    power_draw: data.power_draw ? Number(data.power_draw) : 0,
+    // Safely capture manufacturer field or fallback to an empty string/Unknown
+    manufacturer: data.manufacturer || 'Unknown Brand' 
   };
 };
 
@@ -191,9 +198,9 @@ export const handleAddPart = (componentType: string): void => {
 export const getComponentData = (
   project: ProjectData,
   componentKey: string
-): { name: string; price: number } | undefined => {
+): { name: string; price: number; manufacturer?: string } | undefined => {
   return project[componentKey as keyof ProjectData] as
-    | { name: string; price: number }
+    | { name: string; price: number; manufacturer?: string }
     | undefined;
 };
 
