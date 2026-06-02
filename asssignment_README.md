@@ -44,7 +44,7 @@ Note that this should start running the backend at http://localhost:5001
 
 # 3. Frontend Setup
 
-## 1. Open client directory
+## 1. Open client directory in a new terminal
 
 ## 2. Create env variable file
 `cp .env.example .env`
