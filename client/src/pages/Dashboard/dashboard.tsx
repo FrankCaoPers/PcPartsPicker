@@ -16,6 +16,13 @@ function Dashboard() {
         loadProjects();
     }, []);
 
+
+    const handleSignOut = () => {
+        localStorage.removeItem("token");     
+        window.location.href = "/login"; 
+    };
+
+
     const handleCreateClick = async () => {
         const projectName = prompt("Enter a name for your new PC build:");
         if (!projectName || projectName.trim() === "") return;
@@ -52,7 +59,6 @@ function Dashboard() {
                     <h3>{project.name}</h3>
                     <p>Estimated Cost: ${project.total_price}</p>
                     <p>Power Draw: {project.total_power}W</p>
-                    <small>ID: {project.project_id}</small>
                 </div>
                 
                 <div className="project-card-actions">
@@ -81,6 +87,9 @@ function Dashboard() {
                 <h2>Your PC Builds</h2>
                 <button type="button" onClick={handleCreateClick} className="btn-create">
                     + Start New Build
+                </button>
+                <button type="button" onClick={handleSignOut}>
+                    Sign Out
                 </button>
             </div>
 
