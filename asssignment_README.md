@@ -28,31 +28,31 @@ Note that you may need to add
 
 ---
 
-## 2. Backend Setup
+# 2. Backend Setup
 
-# 1. Navigate to server directory in a terminal
+## 1. Navigate to server directory in a terminal
 
-# 2. Create env variable file
+## 2. Create env variable file
 `cp .env.example .env`
 
-# 3. Open .env file and replace your username and password in the file
+## 3. Open .env file and replace your username and password in the file
 
-# 4. Start the server
+## 4. Start the server
 `npm start`
 
 Note that this should start running the backend at http://localhost:5001
 
-## 3. Frontend Setup
+# 3. Frontend Setup
 
-# 1. Open client directory
+## 1. Open client directory
 
-# 2. Create env variable file
+## 2. Create env variable file
 `cp .env.example .env`
 
-# 3. Make sure .env points to backend 
+## 3. Make sure .env points to backend 
 `Vite_API_URL=http://localhost:5001`
 
-# 4. Start the development server
+## 4. Start the development server
 `npm run dev`
 
 This should open the webpage at http://localhost:5173
